@@ -9,7 +9,6 @@ class dingpiao(object):
 
     # 构造函数，初始化url、出发站、终点站、出发时间、登录用户名、登录密码
     def __init__(self, start, end, time, username, password, cc):
-        self.url = "https://www.12306.cn/index/"  # 主页
         self.login_url = "https://kyfw.12306.cn/otn/resources/login.html"  # 登录页面
         self.driver = None  # driver
         self.start = start  # 出发站
@@ -35,7 +34,7 @@ class dingpiao(object):
         options = webdriver.ChromeOptions()
         location = r"E:/Python/爬虫小项目/chrome-win/chrome.exe"  # chrome地址
         options.binary_location = location
-        options.add_experimental_option('excludeSwitches', ['enable-automation'])
+        options.add_experimental_option('excludeSwitches', ['enable-automation'])  # 反反爬虫
         self.driver = webdriver.Chrome("E:/Python/爬虫小项目/chromedriver.exe", options=options)
         self.driver.maximize_window()  # 设置窗口最大化
         pass
@@ -73,7 +72,7 @@ class dingpiao(object):
             huakuai.move_by_offset(300, 0)
             huakuai.perform()
 
-            sleep(2)
+            sleep(3)
         except:
             traceback.print_exc()
             self.driver.quit()
@@ -82,8 +81,13 @@ class dingpiao(object):
     # 查询车票
     def search_ticket(self):
         try:
-            # get网站
-            self.driver.get(self.url)
+            # 处理弹窗
+            self.driver.find_element(by=By.XPATH, value="//div[@class='modal']/div[@class='modal-ft']/a").click()
+            # 点击首页 切换到首页
+            shouye = self.driver.find_element(by=By.ID, value="J-index")
+            shouye.find_element(by=By.XPATH, value="./a").click()
+
+            sleep(1)
 
             # 单程搜索框
             search_form = self.driver.find_element(by=By.XPATH,
@@ -109,7 +113,7 @@ class dingpiao(object):
 
             # 得到value
             # terminal_value = terminal.get_attribute('value')
-            sleep(2)
+            sleep(3)
         except:
             traceback.print_exc()
             self.driver.quit()
@@ -127,7 +131,7 @@ class dingpiao(object):
         # 点击预定，index-1是因为每个车次由两个tr标识，我们定位的是第二个，所以要减一
         tr[index - 1].find_element(by=By.XPATH, value="//div[@class='t-list']/table/tbody[1]/tr[13]/td[13]").click()
 
-        sleep(2)
+        sleep(3)
         pass
 
     # 购买车票
@@ -136,7 +140,7 @@ class dingpiao(object):
             self.driver.switch_to.window(self.driver.window_handles[1])  # 切换到当前窗口
             # 选择乘车人
             chengcheren = self.driver.find_element(by=By.ID, value="normal_passenger_id")
-            chengcheren.find_element(by=By.XPATH, value="./li[2]").click()  # 选择乘车人，事先选择好
+            chengcheren.find_element(by=By.XPATH, value="./li[2]/label").click()  # 选择乘车人，事先选择好
             # 提交订单
             self.driver.find_element(by=By.ID, value="submitOrder_id").click()
 
