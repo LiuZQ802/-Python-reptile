@@ -3,6 +3,7 @@ import urllib.request
 import xlwt
 from lxml import etree
 import sqlite3
+import pymysql
 
 
 class spider:
@@ -20,6 +21,7 @@ class spider:
     col = ("影片中文名", "影片外国名", "影片链接", "评分", "评价数", "概况", "相关信息")  # 列名
 
     sqlite3_con = ''  # sqlite数据库连接
+    mysql_con = ''  # mysql数据库连接
 
     # 构造函数
     def __init__(self):
@@ -28,13 +30,22 @@ class spider:
         self.get_data()  # 获得每一部电影的数据
         # self.save_to_excel()  # 数据保存到excel表
 
-        self.connect_sqlite()  # 连接sqlite数据库，并且创建表
-        self.save_to_sqlite()  # 数据保存到sqlite数据库中
+        # self.connect_sqlite()  # 连接sqlite数据库，并且创建表
+        # self.save_to_database(self.sqlite3_con)  # 数据保存到sqlite数据库中
+        self.conncet_mysql()  # 连接mysql数据库
+        self.save_to_database(self.mysql_con)  # 保存信息到mysql数据库
         pass
 
     # 析构函数
     def __del__(self):
-        self.sqlite3_con.close()  # 关闭数据库
+        try:
+            self.sqlite3_con.close()  # 关闭数据库
+        except:
+            print("sqlite数据库没有打开")
+        try:
+            self.mysql_con.close()  # 关闭mysql数据库
+        except:
+            print("mysql数据库没有打开")
         pass
 
     # 爬取每一页网页
@@ -151,23 +162,51 @@ class spider:
             self.sqlite3_con.rollback()  # 回滚
         pass
 
-    # 保存信息到sqlite数据库
-    def save_to_sqlite(self):
-        cursor = self.sqlite3_con.cursor()
+    # 连接mysql数据库，并创建表
+    def conncet_mysql(self):
+        host = "localhost"
+        user = "root"
+        passwd = "root"
+        db = "douban"
+        self.mysql_con = pymysql.connect(host=host, user=user, password=passwd, db=db)  # 连接数据库
+        cursor = self.mysql_con.cursor()
+        try:
+            sql = '''
+                                        create table movie250
+                                        (
+                                            id int primary key AUTO_INCREMENT,
+                                        cname text,
+                                        ename text,
+                                        info_link text,
+                                        score  float,
+                                        related text,
+                                        instroduction text,
+                                        info text
+                                        );
+                                        '''
+            cursor.execute(sql)
+            self.mysql_con.commit()
+        except:
+            self.mysql_con.rollback()  # 回滚
+        pass
+
+    # 保存信息到数据库,db表示数据库
+    def save_to_database(self, db):
+        cursor = db.cursor()
         try:
             for item in range(250):
                 sql = '''
-                        insert into movie250(cname,ename,info_link,score,related,instroduction,info)
-                        VALUES("%s","%s",'%s',%f,"%s","%s","%s");          
-                        ''' % (
+                               insert into movie250(cname,ename,info_link,score,related,instroduction,info)
+                               VALUES("%s","%s",'%s',%f,"%s","%s","%s");          
+                               ''' % (
                     self.name[item], self.foreign_name[item], self.link[item], float(self.score[item]),
                     self.comment_number[item],
                     self.sentence[item],
                     self.relate_information[item])  # 要注意单双引号的使用
                 cursor.execute(sql)
-            self.sqlite3_con.commit()
+            db.commit()
         except Exception as e:
-            self.sqlite3_con.rollback()  # 回滚
+            db.rollback()  # 回滚
             print(e)
             print("插入失败")
         pass
