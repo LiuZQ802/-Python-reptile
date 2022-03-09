@@ -2,11 +2,12 @@ import urllib.error
 import urllib.request
 import xlwt
 from lxml import etree
+import sqlite3
 
 
 class spider:
     url = 'https://movie.douban.com/top250?start='  # 访问的url
-    saveName = '豆瓣电影Top250'  # 保存的名字
+    saveName = 'doubanMovieTop250'  # 保存的名字
     dataList = []  # 网页返回列表
     film_data = []  # 电影
     name = []  # 电影名
@@ -18,22 +19,28 @@ class spider:
     sentence = []  # 精选语句
     col = ("影片中文名", "影片外国名", "影片链接", "评分", "评价数", "概况", "相关信息")  # 列名
 
+    sqlite3_con = ''  # sqlite数据库连接
+
     # 构造函数
     def __init__(self):
         self.getData()  # 爬取每一页，获得每一页的etree
         self.get_fileData()  # 获得所有电影etree
         self.get_data()  # 获得每一部电影的数据
-        self.save_to_excel()  # 数据保存到excel表
+        # self.save_to_excel()  # 数据保存到excel表
+
+        self.connect_sqlite()  # 连接sqlite数据库，并且创建表
+        self.save_to_sqlite()  # 数据保存到sqlite数据库中
         pass
 
     # 析构函数
     def __del__(self):
+        self.sqlite3_con.close()  # 关闭数据库
         pass
 
     # 爬取每一页网页
     def getData(self):
-        for i in range(0, 15):
-            url = self.url + 'i*25'
+        for i in range(0, 10):
+            url = self.url + '%d' % (i * 25)
             html = self.askURL(url)
             self.dataList.append(html)
         pass
@@ -73,6 +80,7 @@ class spider:
             name = item.xpath("./div/div[@class='info']/div[@class='hd']/a/span[@class='title'][1]/text()")[0]  # 电影名
             foreign_name = item.xpath(
                 "./div/div[@class='info']/div[@class='hd']/a/span[@class='title'][2]/text()")  # 电影外国名
+            # 有的电影没有外国名
             if foreign_name:
                 foreign_name = foreign_name[0].strip(' / ')
             else:
@@ -82,7 +90,12 @@ class spider:
                 0]  # 评分
             comment_number = item.xpath("./div/div[@class='info']/div[@class='bd']/div/span[4]/text()")[0]  # 评论数
             relate_information = item.xpath("./div/div[@class='info']/div[@class='bd']/p[1]/text()")[0].strip()  # 相关信息
-            sentence = item.xpath("./div/div[@class='info']/div[@class='bd']/p[2]/span/text()")[0]  # 精选语句
+            sentence = item.xpath("./div/div[@class='info']/div[@class='bd']/p[2]/span/text()")  # 精选语句
+            # 有的电影没有精选语句
+            if sentence:
+                sentence = sentence[0]
+            else:
+                sentence = ''
             # 将信息全部加入相应列表
             self.name.append(name)
             self.foreign_name.append(foreign_name)
@@ -112,4 +125,49 @@ class spider:
             worksheet.write(tr + 1, 5, self.sentence[tr])
             worksheet.write(tr + 1, 6, self.relate_information[tr])
         workbook.save(self.saveName + ".xls")  # 保存到excel文件
+        pass
+
+    # 连接sqlite数据库,并创建表
+    def connect_sqlite(self):
+        self.sqlite3_con = sqlite3.connect(self.saveName)
+        cursor = self.sqlite3_con.cursor()
+        try:
+            sql = '''
+                    create table movie250
+                    (
+                    id integer primary key autoincrement,
+                    cname text,
+                    ename text,
+                    info_link text,
+                    score  numeric,
+                    related text,
+                    instroduction text,
+                    info text
+                    );
+                    '''
+            cursor.execute(sql)
+            self.sqlite3_con.commit()
+        except:
+            self.sqlite3_con.rollback()  # 回滚
+        pass
+
+    # 保存信息到sqlite数据库
+    def save_to_sqlite(self):
+        cursor = self.sqlite3_con.cursor()
+        try:
+            for item in range(250):
+                sql = '''
+                        insert into movie250(cname,ename,info_link,score,related,instroduction,info)
+                        VALUES("%s","%s",'%s',%f,"%s","%s","%s");          
+                        ''' % (
+                    self.name[item], self.foreign_name[item], self.link[item], float(self.score[item]),
+                    self.comment_number[item],
+                    self.sentence[item],
+                    self.relate_information[item])  # 要注意单双引号的使用
+                cursor.execute(sql)
+            self.sqlite3_con.commit()
+        except Exception as e:
+            self.sqlite3_con.rollback()  # 回滚
+            print(e)
+            print("插入失败")
         pass
