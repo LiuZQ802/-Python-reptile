@@ -3,7 +3,7 @@ from selenium import webdriver
 
 def getDriver():
     options = webdriver.ChromeOptions()
-    location = r"E:\Python\CsAdjust\chrome-win\chrome.exe"  # chrome地址
+    location = r"E:/Python/chrome-win/chrome.exe"  # chrome地址
     options.binary_location = location
     # 图片不加载
     prefs = {
@@ -11,8 +11,8 @@ def getDriver():
             'images': 2
         }
     }
-    options.add_experimental_option('prefs',prefs)
-    driver = webdriver.Chrome("E:\Python\CsAdjust/chromedriver.exe", options=options)  # chromedriver地址
+    options.add_experimental_option('prefs', prefs)
+    driver = webdriver.Chrome("E:/Python/chromedriver.exe", options=options)  # chromedriver地址
     return driver
 
 
@@ -22,7 +22,7 @@ def getCurrentMessage(driver, t):
     try:
         tr = driver.find_elements_by_xpath("//table[@class='adjust_table']/tbody/tr")  # 基本信息
         bcxinxi = driver.find_element_by_xpath("//div[@class='t_fsz']/table/tbody/tr/td")  # 补充信息
-        with open('计算机调剂信息.txt', 'a+', encoding='utf-8') as f:
+        with open('材料.txt', 'a+', encoding='utf-8') as f:
             f.write(str(t) + "、\n")
             f.write(tr[1].text + '\n')
             f.write(tr[2].text + '\n')
@@ -42,7 +42,7 @@ def main():
     t = 1  # 记录第几条数据
     try:
         driver.get(
-            "http://muchong.com/bbs/kaoyan.php?formhash=fd1e0da0&school=&r1%5B%5D=08&r2%5B%5D=0812&r3%5B%5D=&year=2022&type=1&oksubmit=%C8%B7%B6%A8")
+            "http://muchong.com/bbs/kaoyan.php?formhash=75d0046c&school=&r1%5B%5D=08&r2%5B%5D=0805&r3%5B%5D=080502&year=2022&type=1&oksubmit=%C8%B7%B6%A8")
 
         # 不断爬取下一页
         while 1:

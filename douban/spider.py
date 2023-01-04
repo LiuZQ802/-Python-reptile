@@ -28,12 +28,12 @@ class spider:
         self.getData()  # 爬取每一页，获得每一页的etree
         self.get_fileData()  # 获得所有电影etree
         self.get_data()  # 获得每一部电影的数据
-        # self.save_to_excel()  # 数据保存到excel表
+        self.save_to_excel()  # 数据保存到excel表
 
-        # self.connect_sqlite()  # 连接sqlite数据库，并且创建表
-        # self.save_to_database(self.sqlite3_con)  # 数据保存到sqlite数据库中
-        self.conncet_mysql()  # 连接mysql数据库
-        self.save_to_database(self.mysql_con)  # 保存信息到mysql数据库
+        #self.connect_sqlite()  # 连接sqlite数据库，并且创建表
+        #self.save_to_database(self.sqlite3_con)  # 数据保存到sqlite数据库中
+        #self.conncet_mysql()  # 连接mysql数据库
+        #self.save_to_database(self.mysql_con)  # 保存信息到mysql数据库
         pass
 
     # 析构函数
@@ -144,7 +144,7 @@ class spider:
         cursor = self.sqlite3_con.cursor()
         try:
             sql = '''
-                    create table movie250
+                    create table if not exists movie250
                     (
                     id integer primary key autoincrement,
                     cname text,
@@ -172,7 +172,7 @@ class spider:
         cursor = self.mysql_con.cursor()
         try:
             sql = '''
-                                        create table movie250
+                                        create table if not exists movie250
                                         (
                                             id int primary key AUTO_INCREMENT,
                                         cname text,
