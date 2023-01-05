@@ -8,12 +8,12 @@ def main():
         'start': 'SHH:',  # 起始站
         'end': 'CZH',  # 终点站
         'time': '2023-01-18',  # 出发日期
-        'username': '14762711008',  # 12306用户名
-        'password': 'liuJIA001003',  # 12306密码
+        'username': '',  # 12306用户名
+        'password': '',  # 12306密码
         'cc': 'G7066',  # 车次
         'index_ccr': 2,  # 选择第几个乘车人（事先看好）
         'xz':'1A',#选座,1A:A  1C:C 1D:D 1F:F
-        'email': '1254307036@qq.com',  # 用于接收结果的邮箱
+        'email': '',  # 用于接收结果的邮箱
     }
     action = dingpiao(info)
 
